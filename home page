@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Book Library App - Frontend Design</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
+<style>
+    body{
+        font-family: 'Inter', sans-serif;
+        background:#f5f7fb;
+        margin:0;
+        padding:0;
+    }
+
+    header{
+        background:#2b6cb0;
+        padding:15px 25px;
+        color:white;
+        display:flex;
+        justify-content:space-between;
+        align-items:center;
+        box-shadow:0 3px 8px rgba(0,0,0,0.1);
+    }
+
+    header h2{ margin:0; }
+
+    .btn{
+        padding:10px 16px;
+        border:none;
+        background:#2b6cb0;
+        color:white;
+        border-radius:5px;
+        cursor:pointer;
+        font-size:14px;
+    }
+
+    .btn-secondary{
+        background:#1f4f80;
+    }
+
+    .container{
+        max-width:1100px;
+        margin:25px auto;
+        background:white;
+        padding:20px;
+        border-radius:10px;
+        box-shadow:0 4px 12px rgba(0,0,0,0.08);
+    }
+
+    h3{
+        margin-top:0;
+    }
+
+    .input-field{
+        width:100%;
+        padding:10px;
+        margin:8px 0;
+        border:1px solid #d9e1ee;
+        border-radius:6px;
+    }
+
+    .flex{
+        display:flex;
+        gap:20px;
+    }
+
+    .card{
+        background:white;
+        padding:15px;
+        border-radius:8px;
+        border:1px solid #eef2f9;
+        margin-bottom:15px;
+    }
+
+    table{
+        width:100%;
+        border-collapse:collapse;
+        margin-top:10px;
+    }
+
+    th,td{
+        padding:12px;
+        border-bottom:1px solid #f0f3f7;
+        text-align:left;
+    }
+
+    th{
+        background:#f0f4ff;
+        font-weight:600;
+    }
+
+    .status{
+        padding:4px 10px;
+        border-radius:5px;
+        font-size:12px;
+    }
+
+    .available{background:#e7ffef;color:#0a8f37;}
+    .unavailable{background:#ffecec;color:#b30021;}
+</style>
+</head>
+<body>
+
+<header>
+    <h2>📚 Book Library System</h2>
+    <div>
+        <button class="btn">Login</button>
+        <button class="btn btn-secondary">Register</button>
+    </div>
+</header>
+
+<div class="container">
+    <h3>Available Books</h3>
+
+    <div class="card flex" style="align-items:center;">
+        <input type="text" placeholder="Search books..." class="input-field" style="flex:1;">
+        <select class="input-field" style="max-width:200px;">
+            <option>All</option>
+            <option>Available</option>
+            <option>Borrowed</option>
+        </select>
+    </div>
+
+    <table>
+        <thead>
+            <tr>
+                <th>Title</th>
+                <th>Author</th>
+                <th>Genre</th>
+                <th>Available</th>
+                <th>Action</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>Clean Code</td>
+                <td>Robert C. Martin</td>
+                <td>Programming</td>
+                <td><span class="status available">3 copies</span></td>
+                <td><button class="btn">Borrow</button></td>
+            </tr>
+            <tr>
+                <td>Zero to One</td>
+                <td>Peter Thiel</td>
+                <td>Business</td>
+                <td><span class="status unavailable">0 copies</span></td>
+                <td><button class="btn" disabled>Not Available</button></td>
+            </tr>
+        </tbody>
+    </table>
+</div>
+
+<div class="container">
+    <h3>My Borrowed Books</h3>
+
+    <table>
+        <thead>
+            <tr>
+                <th>Book</th>
+                <th>Borrow Date</th>
+                <th>Return</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>Clean Code</td>
+                <td>12 Feb 2025</td>
+                <td><button class="btn">Return</button></td>
+            </tr>
+        </tbody>
+    </table>
+</div>
+
+<div class="container">
+    <h3>Admin Panel</h3>
+
+    <div class="card">
+        <h4>Add / Update Book</h4>
+        <input type="text" placeholder="Book Title" class="input-field">
+        <input type="text" placeholder="Author" class="input-field">
+        <input type="text" placeholder="Genre" class="input-field">
+        <input type="number" placeholder="Total Copies" class="input-field">
+        <button class="btn">Save Book</button>
+    </div>
+
+    <table>
+        <thead>
+            <tr>
+                <th>Title</th>
+                <th>Author</th>
+                <th>Genre</th>
+                <th>Copies</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>Clean Code</td>
+                <td>Robert C. Martin</td>
+                <td>Programming</td>
+                <td>3</td>
+                <td>
+                    <button class="btn">Edit</button>
+                    <button class="btn btn-secondary">Delete</button>
+                </td>
+            </tr>
+        </tbody>
+    </table>
+</div>
+
+</body>
+</html>
