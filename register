@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Register - Book Library System</title>
+
+  <!-- Google Font -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
+
+  <style>
+    /* ===== Basic Page Styling ===== */
+    body {
+      margin: 0;
+      padding: 0;
+      background: #eef2f8;
+      font-family: 'Inter', sans-serif;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+    }
+
+    /* ===== Register Box Container ===== */
+    .register-box {
+      width: 380px;
+      background: #fff;
+      padding: 28px 30px;
+      border-radius: 10px;
+      box-shadow: 0 6px 16px rgba(0, 0, 0, 0.15);
+    }
+
+    h2 {
+      margin: 0 0 20px 0;
+      text-align: center;
+      color: #2b6cb0;
+      font-weight: 600;
+    }
+
+    /* ===== Input Fields Styling ===== */
+    .input-field {
+      width: 100%;
+      padding: 12px;
+      margin: 10px 0;
+      border-radius: 6px;
+      border: 1px solid #d5ddef;
+      font-size: 15px;
+      transition: 0.2s;
+    }
+
+    .input-field:focus {
+      border-color: #2b6cb0;
+      box-shadow: 0 0 4px rgba(43, 108, 176, 0.3);
+    }
+
+    /* ===== Register Button ===== */
+    .btn {
+      width: 100%;
+      padding: 12px;
+      border: none;
+      background: #2b6cb0;
+      color: white;
+      font-size: 16px;
+      border-radius: 6px;
+      cursor: pointer;
+      margin-top: 10px;
+      font-weight: 600;
+    }
+
+    .btn:hover {
+      background: #1f4f80;
+    }
+
+    /* ===== Extra Text (Login Redirect) ===== */
+    .extra {
+      margin-top: 12px;
+      font-size: 14px;
+      text-align: center;
+      color: #666;
+    }
+
+    .extra a {
+      color: #2b6cb0;
+      text-decoration: none;
+      font-weight: 600;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="register-box">
+    <h2>Create Account</h2>
+
+    <!-- Name Input -->
+    <input type="text" placeholder="Full Name" class="input-field" />
+
+    <!-- Email Input -->
+    <input type="email" placeholder="Email" class="input-field" />
+
+    <!-- Password Input -->
+    <input type="password" placeholder="Password" class="input-field" />
+
+    <!-- Role Select -->
+    <select class="input-field">
+      <option value="user">User</option>
+      <option value="admin">Admin</option>
+    </select>
+
+    <!-- Submit Button -->
+    <button class="btn">Register</button>
+
+    <!-- Redirect to Login -->
+    <div class="extra">
+      Already have an account? <a href="#">Login here</a>
+    </div>
+  </div>
+</body>
+</html>
