@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>User Panel — Book Library</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
+
+  <style>
+    :root{
+      --primary:#2b6cb0;
+      --muted:#6b7280;
+      --bg:#f5f7fc;
+      --card:#ffffff;
+      --success:#0a8f37;
+      --danger:#c53030;
+    }
+
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      font-family:'Inter',sans-serif;
+      background:var(--bg);
+      color:#1a1a1a;
+    }
+
+    header{
+      background:var(--primary);
+      color:white;
+      padding:16px 22px;
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      box-shadow:0 4px 12px rgba(0,0,0,0.15);
+    }
+
+    header h1{margin:0; font-size:20px; font-weight:600}
+
+    .btn{
+      padding:10px 15px;
+      border:none;
+      border-radius:7px;
+      cursor:pointer;
+      font-weight:600;
+      font-size:14px;
+    }
+    .btn.logout{background:white; color:var(--primary)}
+    .btn.borrow{background:var(--primary); color:white}
+    .btn.return{background:var(--success); color:white}
+    .btn.disabled{background:#a3b4cc; color:white; cursor:not-allowed}
+
+    .container{
+      max-width:1100px;
+      margin:25px auto;
+      padding:0 16px;
+    }
+
+    .card{
+      background:var(--card);
+      padding:22px;
+      border-radius:12px;
+      margin-bottom:25px;
+      box-shadow:0 4px 14px rgba(18,38,63,0.06);
+      border:1px solid rgba(15,23,42,0.03);
+    }
+
+    .title{
+      font-size:20px;
+      font-weight:600;
+      margin:0 0 10px;
+    }
+
+    .muted{font-size:14px; color:var(--muted)}
+
+    .search-bar{
+      display:flex;
+      gap:10px;
+      margin:12px 0 20px;
+    }
+
+    input, select{
+      padding:10px 12px;
+      border:1px solid #d8e2f1;
+      border-radius:8px;
+      font-size:15px;
+    }
+    input{flex:1}
+
+    table{width:100%; border-collapse:collapse}
+    th,td{padding:14px 10px; border-bottom:1px solid #eef1f7; text-align:left}
+    th{background:#f1f4ff; font-weight:600}
+
+    .status{
+      padding:4px 10px;
+      font-size:12px;
+      border-radius:5px;
+      font-weight:600;
+      display:inline-block;
+    }
+    .available{background:#e8ffef; color:var(--success)}
+    .unavailable{background:#ffe8e8; color:var(--danger)}
+
+    @media(max-width:900px){
+      .search-bar{flex-direction:column}
+    }
+  </style>
+</head>
+
+<body>
+
+<header>
+  <h1>User Panel — Book Library</h1>
+  <button class="btn logout">Logout</button>
+</header>
+
+<div class="container">
+
+  <!-- Greeting -->
+  <div class="card">
+    <h2 class="title">Welcome, User!</h2>
+    <p class="muted">Borrow books from the library and track your borrowed list.</p>
+  </div>
+
+  <!-- Browse Books -->
+  <div class="card">
+    <h2 class="title">Browse Books</h2>
+
+    <div class="search-bar">
+      <input type="text" id="search" placeholder="Search books..." />
+      <select id="filter">
+        <option value="all">All Books</option>
+        <option value="available">Available Only</option>
+        <option value="borrowed">Borrowed Only</option>
+      </select>
+    </div>
+
+    <table>
+      <thead>
+        <tr>
+          <th>Title</th>
+          <th>Author</th>
+          <th>Genre</th>
+          <th>Available</th>
+          <th>Action</th>
+        </tr>
+      </thead>
+      <tbody id="booksList">
+        <!-- JS will render rows here -->
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Borrowed Books -->
+  <div class="card">
+    <h2 class="title">My Borrowed Books</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>Book</th>
+          <th>Date</th>
+          <th>Return</th>
+        </tr>
+      </thead>
+      <tbody id="borrowedList">
+        <!-- JS will render rows here -->
+      </tbody>
+    </table>
+  </div>
+
+</div>
+
+<script>
+  // Keys
+  const BOOKS_KEY = 'demo_books';
+  const BORROWS_KEY = 'demo_borrows';
+  const CURRENT_USER = 'demo_user';
+
+  // Load/Save helpers
+  const load = (k,f=[]) => JSON.parse(localStorage.getItem(k)) || f;
+  const save = (k,v) => localStorage.setItem(k, JSON.stringify(v));
+
+  const booksList = document.getElementById('booksList');
+  const borrowedList = document.getElementById('borrowedList');
+  const search = document.getElementById('search');
+  const filter = document.getElementById('filter');
+
+  // Render book list
+  function renderBooks(){
+    const books = load(BOOKS_KEY);
+    const borrows = load(BORROWS_KEY);
+    const user = load(CURRENT_USER, {email:'user@example.com'});
+
+    const q = search.value.toLowerCase();
+    const f = filter.value;
+
+    let filtered = books.filter(b =>
+      (!q || (b.title+b.author+(b.genre||'')).toLowerCase().includes(q))
+    );
+
+    if(f === 'available') filtered = filtered.filter(b => b.availableCopies > 0);
+    if(f === 'borrowed'){
+      const borrowedIds = borrows.filter(x => x.user === user.email && !x.isReturned).map(x => x.bookId);
+      filtered = filtered.filter(b => borrowedIds.includes(b.id));
+    }
+
+    booksList.innerHTML = '';
+
+    if(!filtered.length){
+      booksList.innerHTML = `<tr><td colspan='5' class='muted'>No books found.</td></tr>`;
+      return;
+    }
+
+    filtered.forEach(b =>{
+      const isBorrowed = borrows.some(x => x.bookId===b.id && x.user===user.email && !x.isReturned);
+
+      booksList.innerHTML += `
+        <tr>
+          <td>${b.title}</td>
+          <td>${b.author}</td>
+          <td>${b.genre||'—'}</td>
+          <td>
+            <span class="status ${b.availableCopies>0?'available':'unavailable'}">
+              ${b.availableCopies>0? b.availableCopies+' copies':'Unavailable'}
+            </span>
+          </td>
+          <td>
+            ${isBorrowed
+              ? `<button class='btn disabled'>Borrowed</button>`
+              : b.availableCopies>0
+                ? `<button class='btn borrow' onclick='borrowBook("${b.id}")'>Borrow</button>`
+                : `<button class='btn disabled'>Not Available</button>`
+            }
+          </td>
+        </tr>`;
+    });
+  }
+
+  // Render borrowed books
+  function renderBorrowed(){
+    const borrows = load(BORROWS_KEY);
+    const books = load(BOOKS_KEY);
+    const user = load(CURRENT_USER, {email:'user@example.com'});
+
+    const my = borrows.filter(x => x.user===user.email && !x.isReturned);
+
+    borrowedList.innerHTML = '';
+
+    if(!my.length){
+      borrowedList.innerHTML = `<tr><td colspan='3' class='muted'>No borrowed books.</td></tr>`;
+      return;
+    }
+
+    my.forEach(x =>{
+      const book = books.find(b => b.id===x.bookId);
+      borrowedList.innerHTML += `
+      <tr>
+        <td>${book.title}</td>
+        <td>${x.date}</td>
+        <td><button class='btn return' onclick='returnBook("${x.bookId}")'>Return</button></td>
+      </tr>`;
+    });
+  }
+
+  // Borrow book
+  function borrowBook(id){
+    const books = load(BOOKS_KEY);
+    const borrows = load(BORROWS_KEY);
+    const user = load(CURRENT_USER, {email:'user@example.com'});
+
+    const book = books.find(b=>b.id===id);
+    if(!book || book.availableCopies<=0) return;
+
+    // prevent duplicate borrow
+    if(borrows.some(x => x.bookId===id && x.user===user.email && !x.isReturned))
+      return alert('You already borrowed this book.');
+
+    book.availableCopies--;
+    borrows.push({bookId:id, user:user.email, date:new Date().toLocaleDateString(), isReturned:false});
+
+    save(BOOKS_KEY,books);
+    save(BORROWS_KEY,borrows);
+
+    renderBooks();
+    renderBorrowed();
+  }
+
+  // Return book
+  function returnBook(id){
+    const books = load(BOOKS_KEY);
+    const borrows = load(BORROWS_KEY);
+    const user = load(CURRENT_USER, {email:'user@example.com'});
+
+    const book = books.find(b=>b.id===id);
+    const rec = borrows.find(x=>x.bookId===id && x.user===user.email && !x.isReturned);
+
+    if(!book || !rec) return;
+
+    rec.isReturned = true;
+    book.availableCopies++;
+
+    save(BOOKS_KEY,books);
+    save(BORROWS_KEY,borrows);
+
+    renderBooks();
+    renderBorrowed();
+  }
+
+  // Events
+  search.addEventListener('input', renderBooks);
+  filter.addEventListener('change', renderBooks);
+
+  // First load
+  renderBooks();
+  renderBorrowed();
+</script>
+
+</body>
+</html>
