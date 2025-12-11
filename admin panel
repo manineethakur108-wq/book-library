@@ -1,0 +1,389 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Admin Panel — Book Library</title>
+
+  <!-- Google font -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
+
+  <style>
+    /* ====== Simple, readable styling (human-friendly) ====== */
+    :root{
+      --primary: #2b6cb0;
+      --muted: #6b7280;
+      --bg: #f4f6fb;
+      --card: #ffffff;
+      --danger: #d11a2a;
+    }
+
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      font-family: 'Inter', system-ui, -apple-system, sans-serif;
+      background:var(--bg);
+      color:#222;
+      -webkit-font-smoothing:antialiased;
+    }
+
+    header{
+      background:var(--primary);
+      color:white;
+      padding:14px 20px;
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+    }
+    header h1{font-size:18px; margin:0}
+
+    .wrap{max-width:1100px; margin:28px auto; padding:0 16px}
+    .grid{display:grid; grid-template-columns:1fr 420px; gap:20px}
+
+    .card{
+      background:var(--card);
+      padding:18px;
+      border-radius:10px;
+      box-shadow:0 6px 18px rgba(18,38,63,0.06);
+      border:1px solid rgba(15,23,42,0.03);
+    }
+
+    label{display:block; font-size:13px; margin-bottom:6px; color:var(--muted)}
+    input[type="text"], input[type="number"], select{
+      width:100%;
+      padding:10px 12px;
+      margin-bottom:12px;
+      border-radius:8px;
+      border:1px solid #e6eef8;
+      font-size:14px;
+    }
+
+    .row{display:flex; gap:10px}
+    .row > *{flex:1}
+
+    .btn{
+      display:inline-block;
+      background:var(--primary);
+      color:white;
+      padding:10px 14px;
+      border:none;
+      border-radius:8px;
+      cursor:pointer;
+      font-weight:600;
+      font-size:14px;
+    }
+
+    .btn.ghost{background:transparent; color:var(--primary); border:1px solid rgba(43,108,176,0.12)}
+    .btn.danger{background:var(--danger)}
+
+    table{width:100%; border-collapse:collapse; margin-top:12px}
+    th, td{padding:12px 10px; border-bottom:1px solid #f2f6fb; text-align:left}
+    th{background:#fbfdff; font-weight:700; font-size:13px}
+
+    .muted{color:var(--muted); font-size:13px}
+
+    .actions button{margin-right:8px}
+
+    @media (max-width:900px){
+      .grid{grid-template-columns:1fr}
+    }
+  </style>
+</head>
+
+<body>
+
+  <header>
+    <h1>Admin Panel — Book Library</h1>
+    <div>
+      <!-- In a real app this would show admin name + logout link -->
+      <button class="btn ghost" id="logoutBtn">Logout</button>
+    </div>
+  </header>
+
+  <main class="wrap">
+    <div class="grid">
+
+      <!-- Left column: Manage Books List -->
+      <section class="card" aria-labelledby="manage-title">
+        <h2 id="manage-title">Manage Books</h2>
+        <p class="muted">Add new books or edit existing records. You can only delete a book when there are no active borrows.</p>
+
+        <!-- Search + filter (client-side) -->
+        <div style="display:flex; gap:10px; margin-top:12px; margin-bottom:10px">
+          <input type="text" id="search" placeholder="Search title, author or genre" />
+          <select id="filter">
+            <option value="all">All</option>
+            <option value="available">Available</option>
+            <option value="borrowed">Borrowed</option>
+          </select>
+          <button class="btn ghost" id="refreshBtn">Refresh</button>
+        </div>
+
+        <div id="booksTableWrapper">
+          <table aria-describedby="manage-title">
+            <thead>
+              <tr>
+                <th>Title</th>
+                <th>Author</th>
+                <th>Genre</th>
+                <th style="width:120px">Total</th>
+                <th style="width:120px">Available</th>
+                <th style="width:150px">Actions</th>
+              </tr>
+            </thead>
+            <tbody id="booksTbody">
+              <!-- rows inserted by JS -->
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- Right column: Add / Edit Book -->
+      <aside class="card" aria-labelledby="form-title">
+        <h3 id="form-title">Add a Book</h3>
+        <p class="muted">Fill all required fields and click <strong>Save</strong>.</p>
+
+        <!-- Book Form: we use the same form for Add and Edit. JS will toggle behavior. -->
+        <form id="bookForm" onsubmit="return false;">
+
+          <!-- Hidden field to hold id when editing -->
+          <input type="hidden" id="bookId" />
+
+          <label for="title">Title *</label>
+          <input id="title" type="text" placeholder="e.g. Clean Code" required />
+
+          <label for="author">Author *</label>
+          <input id="author" type="text" placeholder="e.g. Robert C. Martin" required />
+
+          <label for="genre">Genre</label>
+          <input id="genre" type="text" placeholder="e.g. Programming" />
+
+          <div class="row">
+            <div>
+              <label for="totalCopies">Total Copies *</label>
+              <input id="totalCopies" type="number" min="1" value="1" required />
+            </div>
+            <div>
+              <label for="availableCopies">Available Copies *</label>
+              <input id="availableCopies" type="number" min="0" value="1" required />
+            </div>
+          </div>
+
+          <div style="display:flex; gap:10px; margin-top:10px">
+            <button class="btn" id="saveBtn">Save</button>
+            <button class="btn ghost" id="cancelBtn" type="button">Cancel</button>
+          </div>
+
+          <p id="formNote" class="muted" style="margin-top:10px">Note: When editing, do not set <em>total copies</em> lower than already borrowed copies.</p>
+        </form>
+      </aside>
+
+    </div>
+  </main>
+
+  <!-- ===== Simple client-side logic using localStorage ===== -->
+  <script>
+    // Keys in localStorage
+    const BOOKS_KEY = 'demo_books';
+    const BORROWS_KEY = 'demo_borrows'; // This app only checks borrows to prevent deleting borrowed books
+
+    // Simple helper to read/write JSON from localStorage
+    function load(key, fallback = []) {
+      try { return JSON.parse(localStorage.getItem(key)) || fallback; } catch (e) { return fallback; }
+    }
+    function save(key, value) { localStorage.setItem(key, JSON.stringify(value)); }
+
+    // Initial demo data (only if not present)
+    if (!localStorage.getItem(BOOKS_KEY)) {
+      const sample = [
+        {id:'b1', title:'Clean Code', author:'Robert C. Martin', genre:'Programming', totalCopies:3, availableCopies:2},
+        {id:'b2', title:'Zero to One', author:'Peter Thiel', genre:'Business', totalCopies:2, availableCopies:0}
+      ];
+      save(BOOKS_KEY, sample);
+    }
+    if (!localStorage.getItem(BORROWS_KEY)) save(BORROWS_KEY, []);
+
+    // UI refs
+    const booksTbody = document.getElementById('booksTbody');
+    const searchInput = document.getElementById('search');
+    const filterSelect = document.getElementById('filter');
+    const refreshBtn = document.getElementById('refreshBtn');
+
+    const bookForm = document.getElementById('bookForm');
+    const bookIdInput = document.getElementById('bookId');
+    const titleInput = document.getElementById('title');
+    const authorInput = document.getElementById('author');
+    const genreInput = document.getElementById('genre');
+    const totalCopiesInput = document.getElementById('totalCopies');
+    const availableCopiesInput = document.getElementById('availableCopies');
+    const saveBtn = document.getElementById('saveBtn');
+    const cancelBtn = document.getElementById('cancelBtn');
+
+    // Helper: create unique id
+    function uid(prefix='id') { return prefix + '_' + Math.random().toString(36).slice(2,9); }
+
+    // Render books table based on search/filter
+    function renderBooks() {
+      const q = (searchInput.value || '').trim().toLowerCase();
+      const filter = filterSelect.value;
+      const books = load(BOOKS_KEY);
+      const borrows = load(BORROWS_KEY);
+
+      // Filter logic
+      const rows = books.filter(b => {
+        if (q) {
+          const text = (b.title + ' ' + b.author + ' ' + (b.genre||'')).toLowerCase();
+          if (!text.includes(q)) return false;
+        }
+        if (filter === 'available' && b.availableCopies <= 0) return false;
+        if (filter === 'borrowed' && b.availableCopies === b.totalCopies) return false; // none borrowed
+        return true;
+      });
+
+      // Clear table
+      booksTbody.innerHTML = '';
+      if (rows.length === 0) {
+        booksTbody.innerHTML = `<tr><td colspan="6" class="muted">No books found.</td></tr>`;
+        return;
+      }
+
+      rows.forEach(b => {
+        // compute whether this book has active borrows
+        const activeBorrows = borrows.filter(r => r.bookId === b.id && !r.isReturned).length;
+
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td>${escapeHtml(b.title)}</td>
+          <td>${escapeHtml(b.author)}</td>
+          <td>${escapeHtml(b.genre || '—')}</td>
+          <td>${b.totalCopies}</td>
+          <td>${b.availableCopies}</td>
+          <td class="actions">
+            <button data-id="${b.id}" class="btn ghost edit">Edit</button>
+            <button data-id="${b.id}" class="btn danger delete" ${activeBorrows>0? 'disabled title="Has active borrows"':''}>Delete</button>
+          </td>
+        `;
+        booksTbody.appendChild(tr);
+      });
+
+      // Attach event handlers for new buttons
+      document.querySelectorAll('.edit').forEach(btn => btn.addEventListener('click', () => startEdit(btn.dataset.id)));
+      document.querySelectorAll('.delete').forEach(btn => btn.addEventListener('click', () => {
+        if (!confirm('Delete this book?')) return;
+        deleteBook(btn.dataset.id);
+      }));
+    }
+
+    // Escape HTML for safety in this demo
+    function escapeHtml(s) { return String(s||'').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":"&#39;"}[c])); }
+
+    // Add or Update book
+    function saveBook() {
+      const id = bookIdInput.value;
+      const title = titleInput.value.trim();
+      const author = authorInput.value.trim();
+      const genre = genreInput.value.trim();
+      const total = parseInt(totalCopiesInput.value, 10);
+      let available = parseInt(availableCopiesInput.value, 10);
+
+      if (!title || !author || !total || isNaN(total) || total < 1) return alert('Please provide valid title, author and total copies (>=1).');
+      if (isNaN(available)) available = total;
+      if (available > total) { alert('Available copies cannot exceed total copies.'); return; }
+
+      const books = load(BOOKS_KEY);
+
+      if (id) {
+        // Update
+        const book = books.find(x => x.id === id);
+        if (!book) return alert('Book not found');
+
+        // borrowedCount = total - available for previous values
+        const borrowedCount = book.totalCopies - book.availableCopies;
+        if (total < borrowedCount) return alert(`Cannot set total copies to ${total}. ${borrowedCount} copy(ies) are currently borrowed.`);
+
+        // adjust available relative to change in total
+        const diff = total - book.totalCopies;
+        book.title = title; book.author = author; book.genre = genre;
+        book.totalCopies = total;
+        book.availableCopies = Math.max(0, book.availableCopies + diff);
+        // ensure availableCopies is not greater than total
+        if (book.availableCopies > book.totalCopies) book.availableCopies = book.totalCopies;
+
+        save(BOOKS_KEY, books);
+        resetForm();
+        renderBooks();
+        alert('Book updated');
+      } else {
+        // Create (prevent duplicate title+author)
+        const exists = books.some(x => x.title.toLowerCase() === title.toLowerCase() && x.author.toLowerCase() === author.toLowerCase());
+        if (exists) return alert('A book with same title and author already exists.');
+        const newBook = {id: uid('b'), title, author, genre, totalCopies: total, availableCopies: available};
+        books.push(newBook);
+        save(BOOKS_KEY, books);
+        resetForm();
+        renderBooks();
+        alert('Book added');
+      }
+    }
+
+    // Start editing a book
+    function startEdit(id) {
+      const books = load(BOOKS_KEY);
+      const book = books.find(b => b.id === id);
+      if (!book) return alert('Book not found');
+      bookIdInput.value = book.id;
+      titleInput.value = book.title;
+      authorInput.value = book.author;
+      genreInput.value = book.genre || '';
+      totalCopiesInput.value = book.totalCopies;
+      availableCopiesInput.value = book.availableCopies;
+      document.getElementById('form-title').textContent = 'Edit Book';
+      saveBtn.textContent = 'Update';
+    }
+
+    // Delete book
+    function deleteBook(id) {
+      let books = load(BOOKS_KEY);
+      const borrows = load(BORROWS_KEY);
+      // block delete if active borrows exist
+      const active = borrows.some(b => b.bookId === id && !b.isReturned);
+      if (active) return alert('Cannot delete: There are active borrows for this book.');
+      books = books.filter(b => b.id !== id);
+      save(BOOKS_KEY, books);
+      renderBooks();
+      alert('Book deleted');
+    }
+
+    // Reset form to Add state
+    function resetForm() {
+      bookForm.reset();
+      bookIdInput.value = '';
+      document.getElementById('form-title').textContent = 'Add a Book';
+      saveBtn.textContent = 'Save';
+      // default copies inputs
+      totalCopiesInput.value = 1;
+      availableCopiesInput.value = 1;
+    }
+
+    // Cancel button
+    cancelBtn.addEventListener('click', resetForm);
+
+    // Save button
+    saveBtn.addEventListener('click', saveBook);
+
+    // search / filter / refresh hooks
+    searchInput.addEventListener('input', renderBooks);
+    filterSelect.addEventListener('change', renderBooks);
+    refreshBtn.addEventListener('click', () => { renderBooks(); alert('Refreshed'); });
+
+    // initial render
+    renderBooks();
+
+    // Logout demo handler
+    document.getElementById('logoutBtn').addEventListener('click', () => {
+      // In real app you'd clear token and redirect
+      alert('Logout — demo only');
+    });
+  </script>
+</body>
+</html>
